@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Pressable, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, MapPin, Calendar, User, Handshake, MessageCircle, CheckCircle, Phone, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Calendar, User, Handshake, MessageCircle, Trash2 } from 'lucide-react-native';
 import { useListings } from '../../context/ListingsContext';
 import { Colors, FontSizes, Spacing } from '../../constants/theme';
 import CategoryBadge from '../../components/CategoryBadge';
+import ActionModal from '../../components/ActionModal';
 
 export default function DetailScreen() {
     const { id } = useLocalSearchParams();
@@ -59,7 +60,7 @@ export default function DetailScreen() {
 
     return (
         <View style={styles.container}>
-            {/* Hero Image with floating back button */}
+            {/* Hero Image */}
             <View style={styles.heroContainer}>
                 <Image
                     source={typeof listing.image === 'string' ? { uri: listing.image } : listing.image}
@@ -71,13 +72,7 @@ export default function DetailScreen() {
 
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => {
-                        if (router.canGoBack()) {
-                            router.back();
-                        } else {
-                            router.replace('/');
-                        }
-                    }}
+                    onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
                     activeOpacity={0.8}
                 >
                     <ArrowLeft size={24} color={Colors.white} />
@@ -100,7 +95,6 @@ export default function DetailScreen() {
             >
                 <Text style={styles.title}>{listing.title}</Text>
 
-                {/* Meta row */}
                 <View style={styles.metaRow}>
                     <View style={styles.metaItem}>
                         <MapPin size={15} color={Colors.softGreen} style={styles.metaIcon} />
@@ -113,13 +107,11 @@ export default function DetailScreen() {
                     </View>
                 </View>
 
-                {/* Description */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Açıklama</Text>
                     <Text style={styles.descriptionText}>{listing.description}</Text>
                 </View>
 
-                {/* Owner card */}
                 {listing.owner && (
                     <View style={styles.ownerCard}>
                         <View style={styles.ownerAvatar}>
@@ -155,57 +147,11 @@ export default function DetailScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* Bottom Sheet Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
+            <ActionModal
                 visible={isModalVisible}
-                onRequestClose={() => setIsModalVisible(false)}
-            >
-                <Pressable style={styles.modalBackdrop} onPress={() => setIsModalVisible(false)}>
-                    {/* stopPropagation so tapping the sheet itself doesn't close it */}
-                    <Pressable style={styles.modalSheet} onPress={() => {}}>
-                        {/* Drag handle */}
-                        <View style={styles.dragHandle} />
-
-                        {/* Icon */}
-                        <View style={styles.modalIconWrapper}>
-                            {isVoluntary ? (
-                                <CheckCircle size={48} color={Colors.softGreen} />
-                            ) : (
-                                <MessageCircle size={48} color={Colors.navyBlue} />
-                            )}
-                        </View>
-
-                        {/* Title */}
-                        <Text style={styles.modalTitle}>
-                            {isVoluntary ? 'Harika! Görevi Üstlendin 🎉' : 'İletişim Bilgileri'}
-                        </Text>
-
-                        {/* Description */}
-                        <Text style={styles.modalDescription}>
-                            {isVoluntary
-                                ? 'Gönen\'de birine yardımcı olduğun için teşekkürler. Detaylar için ilan sahibiyle iletişime geçebilirsin:'
-                                : 'İlan sahibiyle aşağıdaki numaradan iletişime geçerek eşyayı teslim alabilirsin:'}
-                        </Text>
-
-                        {/* Phone number row */}
-                        <View style={styles.phoneRow}>
-                            <Phone size={20} color={Colors.softGreen} style={styles.phoneIcon} />
-                            <Text style={styles.phoneNumber}>0555 123 45 67</Text>
-                        </View>
-
-                        {/* Close button */}
-                        <TouchableOpacity
-                            style={styles.closeButton}
-                            activeOpacity={0.7}
-                            onPress={() => setIsModalVisible(false)}
-                        >
-                            <Text style={styles.closeButtonText}>Kapat</Text>
-                        </TouchableOpacity>
-                    </Pressable>
-                </Pressable>
-            </Modal>
+                isVoluntary={isVoluntary}
+                onClose={() => setIsModalVisible(false)}
+            />
         </View>
     );
 }
@@ -215,8 +161,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.white,
     },
-
-    // Hero
     heroContainer: {
         height: 300,
         position: 'relative',
@@ -256,8 +200,6 @@ const styles = StyleSheet.create({
         bottom: Spacing.x4,
         left: Spacing.x4,
     },
-
-    // Content
     scrollView: {
         flex: 1,
     },
@@ -272,8 +214,6 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.x4,
         lineHeight: 32,
     },
-
-    // Meta row
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -287,7 +227,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     metaIcon: {
-        marginRight: 5,
+        marginRight: Spacing.x1,
     },
     metaText: {
         fontSize: FontSizes.sm,
@@ -299,8 +239,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.slate200,
         marginHorizontal: Spacing.x3,
     },
-
-    // Description
     section: {
         marginBottom: Spacing.x8,
     },
@@ -315,8 +253,6 @@ const styles = StyleSheet.create({
         color: Colors.slate600,
         lineHeight: 26,
     },
-
-    // Owner card
     ownerCard: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -332,7 +268,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#d1fae5',
+        backgroundColor: Colors.green100,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: Spacing.x4,
@@ -360,10 +296,8 @@ const styles = StyleSheet.create({
     ownerLocation: {
         fontSize: FontSizes.xs,
         color: Colors.slate400,
-        marginLeft: 4,
+        marginLeft: Spacing.x1,
     },
-
-    // Footer CTA
     footer: {
         paddingHorizontal: Spacing.x6,
         paddingVertical: Spacing.x4,
@@ -393,87 +327,6 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.lg,
         fontWeight: '700',
     },
-
-    // Modal
-    modalBackdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
-    },
-    modalSheet: {
-        backgroundColor: Colors.white,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingHorizontal: Spacing.x6,
-        paddingTop: Spacing.x3,
-        paddingBottom: Spacing.x10,
-        alignItems: 'center',
-    },
-    dragHandle: {
-        width: 40,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: Colors.slate200,
-        marginBottom: Spacing.x6,
-    },
-    modalIconWrapper: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: Colors.slate50,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: Spacing.x4,
-    },
-    modalTitle: {
-        fontSize: FontSizes.xl,
-        fontWeight: '700',
-        color: Colors.slate800,
-        textAlign: 'center',
-        marginBottom: Spacing.x3,
-    },
-    modalDescription: {
-        fontSize: FontSizes.sm,
-        color: Colors.slate500,
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: Spacing.x6,
-    },
-    phoneRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: Colors.slate50,
-        borderWidth: 1,
-        borderColor: Colors.slate200,
-        borderRadius: 12,
-        paddingVertical: Spacing.x4,
-        paddingHorizontal: Spacing.x6,
-        width: '100%',
-        marginBottom: Spacing.x6,
-    },
-    phoneIcon: {
-        marginRight: Spacing.x3,
-    },
-    phoneNumber: {
-        fontSize: FontSizes.lg,
-        fontWeight: '700',
-        color: Colors.slate800,
-        letterSpacing: 1,
-    },
-    closeButton: {
-        width: '100%',
-        backgroundColor: Colors.slate100,
-        paddingVertical: 16,
-        borderRadius: 14,
-        alignItems: 'center',
-    },
-    closeButtonText: {
-        fontSize: FontSizes.base,
-        fontWeight: '600',
-        color: Colors.slate600,
-    },
-
-    // Not found
     notFoundContainer: {
         flex: 1,
         alignItems: 'center',
@@ -495,8 +348,8 @@ const styles = StyleSheet.create({
     },
     backButtonLarge: {
         backgroundColor: Colors.softGreen,
-        paddingVertical: 12,
-        paddingHorizontal: 24,
+        paddingVertical: Spacing.x3,
+        paddingHorizontal: Spacing.x6,
         borderRadius: 10,
     },
     backButtonLargeText: {

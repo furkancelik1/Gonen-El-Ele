@@ -1,21 +1,36 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mockListings } from '../data/mockData';
+import { Listing } from '../types';
 
-export interface Listing {
-    id: number;
-    title: string;
-    category: string;
-    neighborhood: string;
-    image: string;
-    date: string;
-    description: string;
-    owner?: any;
+const STORAGE_KEY = 'gonenPaylas_listings';
+
+// AsyncStorage'dan yüklenen ilanların require() kaynaklı resimlerini geri yükler.
+// JSON.stringify/parse require() sonuçlarını koruyamaz, bu yama ile düzeltilir.
+const MOCK_IMAGE_MAP: Record<number, any> = {
+    1: require('../assets/images/bebek_arabasi.png'),
+    2: require('../assets/images/lesson.png'),
+    3: require('../assets/images/mont.png'),
+    4: require('../assets/images/market.png'),
+    5: require('../assets/images/masa.png'),
+    6: require('../assets/images/sohbet.png'),
+    7: require('../assets/images/bebek_arabasi.png'),
+    8: require('../assets/images/market_yardim.png'),
+    9: require('../assets/images/masa.png'),
+    10: require('../assets/images/kislik_mont.png'),
+    11: require('../assets/images/lesson.png'),
+    12: require('../assets/images/ingilizce_pratik.png'),
+};
+
+function restoreImages(items: Listing[]): Listing[] {
+    return items.map((item) =>
+        MOCK_IMAGE_MAP[item.id] ? { ...item, image: MOCK_IMAGE_MAP[item.id] } : item
+    );
 }
 
 interface ListingsContextType {
     listings: Listing[];
-    addListing: (listing: any) => Promise<any>;
+    addListing: (listing: any) => Promise<Listing>;
     removeListing: (id: number) => Promise<void>;
     isLoading: boolean;
 }
@@ -29,33 +44,15 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const loadListings = async () => {
             try {
-                const stored = await AsyncStorage.getItem('gonenPaylas_listings');
+                const stored = await AsyncStorage.getItem(STORAGE_KEY);
                 if (stored) {
-                    let parsed = JSON.parse(stored);
-
-                    // Geçmişten AsyncStorage'da kalan ölü linkleri veya public/images stringlerini düzeltme yaması
-                    parsed = parsed.map((item: any) => {
-                        if (item.id === 1) item.image = require('../assets/images/bebek_arabasi.png');
-                        if (item.id === 2) item.image = require('../assets/images/lesson.png');
-                        if (item.id === 3) item.image = require('../assets/images/mont.png');
-                        if (item.id === 4) item.image = require('../assets/images/market.png');
-                        if (item.id === 5) item.image = require('../assets/images/masa.png');
-                        if (item.id === 6) item.image = require('../assets/images/sohbet.png');
-                        if (item.id === 7) item.image = require('../assets/images/bebek_arabasi.png');
-                        if (item.id === 8) item.image = require('../assets/images/market_yardim.png');
-                        if (item.id === 9) item.image = require('../assets/images/masa.png');
-                        if (item.id === 10) item.image = require('../assets/images/kislik_mont.png');
-                        if (item.id === 11) item.image = require('../assets/images/lesson.png');
-                        if (item.id === 12) item.image = require('../assets/images/ingilizce_pratik.png');
-                        return item;
-                    });
-
-                    setListings(parsed);
+                    const parsed: Listing[] = JSON.parse(stored);
+                    setListings(restoreImages(parsed));
                 } else {
                     setListings(mockListings);
                 }
-            } catch (error) {
-                console.error('Error loading listings', error);
+            } catch {
+                // Okuma veya parse hatası — mockData ile güvenli fallback
                 setListings(mockListings);
             } finally {
                 setIsLoading(false);
@@ -65,31 +62,31 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
         loadListings();
     }, []);
 
-    const addListing = async (newListing: any) => {
+    const addListing = async (newListing: any): Promise<Listing> => {
         const listing: Listing = {
             ...newListing,
             id: Date.now(),
             date: 'Az önce',
             owner: { name: 'Ayşe Y.', joined: '2023' },
-            image: newListing.imagePreview, // Using the local URI from image picker
+            image: newListing.imagePreview ?? null,
         };
         const updated = [listing, ...listings];
         setListings(updated);
         try {
-            await AsyncStorage.setItem('gonenPaylas_listings', JSON.stringify(updated));
-        } catch (error) {
-            console.error('Error saving listing', error);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch {
+            // Kaydetme hatası — state güncellendi, persistence başarısız
         }
         return listing;
     };
 
-    const removeListing = async (id: number) => {
-        const updated = listings.filter(l => l.id !== id);
+    const removeListing = async (id: number): Promise<void> => {
+        const updated = listings.filter((l) => l.id !== id);
         setListings(updated);
         try {
-            await AsyncStorage.setItem('gonenPaylas_listings', JSON.stringify(updated));
-        } catch (error) {
-            console.error('Error removing listing', error);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch {
+            // Kaydetme hatası — state güncellendi, persistence başarısız
         }
     };
 

@@ -1,18 +1,10 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image'; // DİKKAT: react-native yerine expo-image'den çağırıyoruz
+import { Image } from 'expo-image';
 import { MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Colors, FontSizes, Spacing } from '../constants/theme';
 import CategoryBadge from './CategoryBadge';
-
-interface Listing {
-    id: number;
-    title: string;
-    category: string;
-    neighborhood: string;
-    image: string;
-    date: string;
-}
+import { Listing } from '../types';
 
 interface ListingCardProps {
     listing: Listing;
@@ -21,23 +13,18 @@ interface ListingCardProps {
 export default function ListingCard({ listing }: ListingCardProps) {
     const router = useRouter();
 
-    const handlePress = () => {
-        router.push(`/detail/${listing.id}`);
-    };
-
     return (
         <TouchableOpacity
             style={styles.cardContainer}
             activeOpacity={0.8}
-            onPress={handlePress}
+            onPress={() => router.push(`/detail/${listing.id}`)}
         >
             <View style={styles.imageContainer}>
-                {/* YENİ MOTOR: contentFit ve transition eklendi */}
                 <Image
                     style={styles.image}
                     source={typeof listing.image === 'string' ? { uri: listing.image } : listing.image}
                     contentFit="cover"
-                    transition={300} // Resim yüklenirken yumuşak bir belirmesi için
+                    transition={300}
                 />
                 <View style={styles.badgePosition}>
                     <CategoryBadge category={listing.category} />
@@ -71,8 +58,8 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
         flex: 1,
-        marginVertical: 8,
-        marginHorizontal: 4,
+        marginVertical: Spacing.x2,
+        marginHorizontal: Spacing.x1,
     },
     imageContainer: {
         height: 150,
@@ -82,12 +69,11 @@ const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: '100%',
-        // resizeMode: 'cover', -> Bunu sildik çünkü expo-image'de contentFit kullanıyoruz
     },
     badgePosition: {
         position: 'absolute',
-        top: 12,
-        right: 12,
+        top: Spacing.x3,
+        right: Spacing.x3,
     },
     contentContainer: {
         padding: Spacing.x4,
@@ -106,14 +92,14 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.x2,
     },
     iconSpaced: {
-        marginRight: 4,
+        marginRight: Spacing.x1,
     },
     locationText: {
         fontSize: FontSizes.sm,
         color: Colors.slate500,
     },
     dateText: {
-        fontSize: 12,
+        fontSize: FontSizes.xs,
         color: Colors.slate400,
     },
 });

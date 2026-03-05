@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import {
-    View, Text, StyleSheet, TextInput, ScrollView,
+    View, Text, StyleSheet, ScrollView,
     TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { CheckCircle2, ChevronRight, ChevronLeft, Upload, Package, HandHeart } from 'lucide-react-native';
+import { CheckCircle2, ChevronRight, ChevronLeft, Upload, Package } from 'lucide-react-native';
 import { neighborhoods } from '../../data/mockData';
 import { useListings } from '../../context/ListingsContext';
 import StepIndicator from '../../components/StepIndicator';
+import FormInput from '../../components/FormInput';
+import CategoryPicker from '../../components/CategoryPicker';
 import { Colors, FontSizes, Spacing } from '../../constants/theme';
 
 const STEPS = ['Temel Bilgiler', 'Konum & Fotoğraf', 'Önizleme'];
@@ -27,7 +29,6 @@ export default function CreateListingScreen() {
     const [form, setForm] = useState(initialForm);
     const [submitted, setSubmitted] = useState(false);
     const [submittedTitle, setSubmittedTitle] = useState('');
-    const [focusedField, setFocusedField] = useState<string | null>(null);
     const router = useRouter();
     const { addListing } = useListings();
 
@@ -57,11 +58,6 @@ export default function CreateListingScreen() {
             setForm({ ...form, imagePreview: result.assets[0].uri });
         }
     };
-
-    const inputStyle = (field: string) => [
-        styles.input,
-        focusedField === field && styles.inputFocused,
-    ];
 
     if (submitted) {
         return (
@@ -115,64 +111,26 @@ export default function CreateListingScreen() {
                                     <Text style={styles.stepSubtitle}>Paylaşmak istediğiniz şeyin türünü belirleyin.</Text>
                                 </View>
 
-                                <View style={styles.categoryGrid}>
-                                    <TouchableOpacity
-                                        style={[styles.categoryCard, form.category === 'Physical Item' && styles.categoryCardSelected]}
-                                        onPress={() => setForm({ ...form, category: 'Physical Item' })}
-                                        activeOpacity={0.8}
-                                    >
-                                        <View style={[styles.categoryIconWrapper, form.category === 'Physical Item' ? styles.iconWrapperSelectedGreen : styles.iconWrapperDefault]}>
-                                            <Package size={24} color={form.category === 'Physical Item' ? Colors.softGreen : Colors.slate500} />
-                                        </View>
-                                        <View style={styles.categoryTextWrapper}>
-                                            <Text style={styles.categoryTitle}>Eşya</Text>
-                                            <Text style={styles.categorySubtitle}>Kıyafet, kitap, mobilya vb.</Text>
-                                        </View>
-                                    </TouchableOpacity>
+                                <CategoryPicker
+                                    selected={form.category}
+                                    onSelect={(cat) => setForm({ ...form, category: cat })}
+                                />
 
-                                    <TouchableOpacity
-                                        style={[styles.categoryCard, form.category === 'Voluntary Service' && styles.categoryCardSelected]}
-                                        onPress={() => setForm({ ...form, category: 'Voluntary Service' })}
-                                        activeOpacity={0.8}
-                                    >
-                                        <View style={[styles.categoryIconWrapper, form.category === 'Voluntary Service' ? styles.iconWrapperSelectedGreen : styles.iconWrapperDefault]}>
-                                            <HandHeart size={24} color={form.category === 'Voluntary Service' ? Colors.softGreen : Colors.slate500} />
-                                        </View>
-                                        <View style={styles.categoryTextWrapper}>
-                                            <Text style={styles.categoryTitle}>Hizmet</Text>
-                                            <Text style={styles.categorySubtitle}>Ders verme, yardım vb.</Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                </View>
+                                <FormInput
+                                    label="İlan Başlığı *"
+                                    value={form.title}
+                                    onChangeText={(text) => setForm({ ...form, title: text })}
+                                    placeholder="Örn: Az kullanılmış kışlık bot"
+                                />
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>İlan Başlığı *</Text>
-                                    <TextInput
-                                        style={inputStyle('title')}
-                                        value={form.title}
-                                        onChangeText={(text) => setForm({ ...form, title: text })}
-                                        onFocus={() => setFocusedField('title')}
-                                        onBlur={() => setFocusedField(null)}
-                                        placeholder="Örn: Az kullanılmış kışlık bot"
-                                        placeholderTextColor={Colors.slate400}
-                                    />
-                                </View>
-
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.label}>Açıklama *</Text>
-                                    <TextInput
-                                        style={[...inputStyle('description'), styles.textArea]}
-                                        value={form.description}
-                                        onChangeText={(text) => setForm({ ...form, description: text })}
-                                        onFocus={() => setFocusedField('description')}
-                                        onBlur={() => setFocusedField(null)}
-                                        placeholder="İlan hakkında detaylı bilgi verin..."
-                                        placeholderTextColor={Colors.slate400}
-                                        multiline
-                                        numberOfLines={4}
-                                        textAlignVertical="top"
-                                    />
-                                </View>
+                                <FormInput
+                                    label="Açıklama *"
+                                    value={form.description}
+                                    onChangeText={(text) => setForm({ ...form, description: text })}
+                                    placeholder="İlan hakkında detaylı bilgi verin..."
+                                    multiline
+                                    numberOfLines={4}
+                                />
                             </View>
                         )}
 
@@ -236,7 +194,7 @@ export default function CreateListingScreen() {
                                         </View>
                                     ) : (
                                         <TouchableOpacity style={styles.uploadBox} onPress={pickImage} activeOpacity={0.7}>
-                                            <Upload size={32} color={Colors.slate400} style={{ marginBottom: 12 }} />
+                                            <Upload size={32} color={Colors.slate400} style={{ marginBottom: Spacing.x3 }} />
                                             <Text style={styles.uploadMainText}>Fotoğraf eklemek için dokunun</Text>
                                             <Text style={styles.uploadSubText}>Galeriden seçin</Text>
                                         </TouchableOpacity>
@@ -297,7 +255,7 @@ export default function CreateListingScreen() {
                                 </TouchableOpacity>
                             ) : (
                                 <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                                    <CheckCircle2 size={20} color={Colors.white} style={{ marginRight: 8 }} />
+                                    <CheckCircle2 size={20} color={Colors.white} style={{ marginRight: Spacing.x2 }} />
                                     <Text style={styles.submitButtonText}>Yayınla</Text>
                                 </TouchableOpacity>
                             )}
@@ -354,60 +312,14 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.xl,
         fontWeight: 'bold',
         color: Colors.slate800,
-        marginBottom: 4,
+        marginBottom: Spacing.x1,
     },
     stepSubtitle: {
         fontSize: FontSizes.sm,
         color: Colors.slate500,
     },
 
-    // Category cards
-    categoryGrid: {
-        gap: Spacing.x4,
-        marginBottom: Spacing.x6,
-    },
-    categoryCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: Spacing.x4,
-        borderWidth: 2,
-        borderColor: Colors.slate200,
-        borderRadius: 12,
-        backgroundColor: Colors.white,
-    },
-    categoryCardSelected: {
-        borderColor: Colors.softGreen,
-        backgroundColor: '#f2fdf7',
-    },
-    categoryIconWrapper: {
-        width: 48,
-        height: 48,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: Spacing.x4,
-    },
-    iconWrapperDefault: {
-        backgroundColor: Colors.slate100,
-    },
-    iconWrapperSelectedGreen: {
-        backgroundColor: '#d1fae5',
-    },
-    categoryTextWrapper: {
-        flex: 1,
-    },
-    categoryTitle: {
-        fontSize: FontSizes.lg,
-        fontWeight: 'bold',
-        color: Colors.slate800,
-        marginBottom: 2,
-    },
-    categorySubtitle: {
-        fontSize: FontSizes.sm,
-        color: Colors.slate500,
-    },
-
-    // Inputs
+    // Neighborhood chips
     inputGroup: {
         marginBottom: Spacing.x5,
     },
@@ -417,24 +329,6 @@ const styles = StyleSheet.create({
         color: Colors.slate700,
         marginBottom: Spacing.x2,
     },
-    input: {
-        borderWidth: 1.5,
-        borderColor: Colors.slate200,
-        borderRadius: 12,
-        padding: Spacing.x4,
-        fontSize: FontSizes.base,
-        color: Colors.slate800,
-        backgroundColor: Colors.white,
-    },
-    inputFocused: {
-        borderColor: Colors.softGreen,
-    },
-    textArea: {
-        height: 120,
-        textAlignVertical: 'top',
-    },
-
-    // Neighborhood chips
     chipsRow: {
         flexDirection: 'row',
         gap: Spacing.x2,
@@ -450,7 +344,7 @@ const styles = StyleSheet.create({
     },
     chipSelected: {
         borderColor: Colors.softGreen,
-        backgroundColor: '#f2fdf7',
+        backgroundColor: Colors.greenLight,
     },
     chipText: {
         fontSize: FontSizes.sm,
@@ -481,7 +375,7 @@ const styles = StyleSheet.create({
     uploadSubText: {
         fontSize: FontSizes.xs,
         color: Colors.slate400,
-        marginTop: 4,
+        marginTop: Spacing.x1,
     },
     imagePreviewContainer: {
         borderRadius: 12,
@@ -497,10 +391,10 @@ const styles = StyleSheet.create({
     },
     removeImageButton: {
         position: 'absolute',
-        top: 12,
-        right: 12,
+        top: Spacing.x3,
+        right: Spacing.x3,
         backgroundColor: 'rgba(239,68,68,0.9)',
-        paddingHorizontal: 12,
+        paddingHorizontal: Spacing.x3,
         paddingVertical: 6,
         borderRadius: 16,
     },
@@ -511,10 +405,10 @@ const styles = StyleSheet.create({
     },
     changeImageButton: {
         position: 'absolute',
-        top: 12,
+        top: Spacing.x3,
         right: 72,
         backgroundColor: 'rgba(0,0,0,0.45)',
-        paddingHorizontal: 12,
+        paddingHorizontal: Spacing.x3,
         paddingVertical: 6,
         borderRadius: 16,
     },
@@ -548,9 +442,9 @@ const styles = StyleSheet.create({
     },
     previewBadge: {
         alignSelf: 'flex-start',
-        backgroundColor: '#d1fae5',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
+        backgroundColor: Colors.green100,
+        paddingHorizontal: Spacing.x3,
+        paddingVertical: Spacing.x1,
         borderRadius: 16,
         marginBottom: Spacing.x3,
     },
@@ -577,7 +471,7 @@ const styles = StyleSheet.create({
         color: Colors.navyBlue,
     },
 
-    // Footer nav buttons
+    // Footer nav
     footerButtons: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -590,8 +484,8 @@ const styles = StyleSheet.create({
     navButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        paddingVertical: Spacing.x3,
+        paddingHorizontal: Spacing.x4,
         borderWidth: 1,
         borderColor: Colors.slate200,
         borderRadius: 10,
@@ -603,7 +497,7 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.base,
         fontWeight: '500',
         color: Colors.slate600,
-        marginLeft: 4,
+        marginLeft: Spacing.x1,
     },
     navButtonTextDisabled: {
         color: Colors.slate400,
@@ -612,8 +506,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: Colors.navyBlue,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        paddingVertical: Spacing.x3,
+        paddingHorizontal: Spacing.x5,
         borderRadius: 10,
     },
     nextButtonDisabled: {
@@ -623,14 +517,14 @@ const styles = StyleSheet.create({
         fontSize: FontSizes.base,
         fontWeight: '600',
         color: Colors.white,
-        marginRight: 4,
+        marginRight: Spacing.x1,
     },
     submitButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: Colors.softGreen,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        paddingVertical: Spacing.x3,
+        paddingHorizontal: Spacing.x5,
         borderRadius: 10,
     },
     submitButtonText: {
@@ -651,7 +545,7 @@ const styles = StyleSheet.create({
         width: 96,
         height: 96,
         borderRadius: 48,
-        backgroundColor: '#d1fae5',
+        backgroundColor: Colors.green100,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: Spacing.x6,

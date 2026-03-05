@@ -1,6 +1,8 @@
 export const Colors = {
     navyBlue: '#1e3a5f',
     softGreen: '#4caf82',
+    green100: '#d1fae5',  // avatar / icon arka planı
+    greenLight: '#f2fdf7', // seçili card arka planı
     slate50: '#f8fafc',
     slate100: '#f1f5f9',
     slate200: '#e2e8f0',
