@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Pressable, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, MapPin, Calendar, User, MessageCircle } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Calendar, User, Handshake, MessageCircle, CheckCircle, Phone, Trash2 } from 'lucide-react-native';
 import { useListings } from '../../context/ListingsContext';
 import { Colors, FontSizes, Spacing } from '../../constants/theme';
 import CategoryBadge from '../../components/CategoryBadge';
@@ -9,7 +10,8 @@ import CategoryBadge from '../../components/CategoryBadge';
 export default function DetailScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    const { listings } = useListings();
+    const { listings, removeListing } = useListings();
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const listing = listings.find(item => item.id === parseInt(id as string, 10));
 
@@ -17,86 +19,175 @@ export default function DetailScreen() {
         return (
             <View style={styles.notFoundContainer}>
                 <Text style={styles.notFoundTitle}>İlan Bulunamadı</Text>
-                <Text style={styles.notFoundText}>Aradığınız ilan yayından kaldırılmış veya mevcut değil.</Text>
-                <TouchableOpacity
-                    style={styles.backButtonLarge}
-                    onPress={() => router.back()}
-                >
-                    <Text style={styles.backButtonText}>İlanlara Dön</Text>
+                <Text style={styles.notFoundText}>
+                    Aradığınız ilan yayından kaldırılmış veya mevcut değil.
+                </Text>
+                <TouchableOpacity style={styles.backButtonLarge} onPress={() => router.back()}>
+                    <Text style={styles.backButtonLargeText}>İlanlara Dön</Text>
                 </TouchableOpacity>
             </View>
         );
     }
 
-    const handleSendMessage = () => {
+    const isVoluntary = listing.category === 'Voluntary Service';
+
+    const handleDelete = () => {
         Alert.alert(
-            "Mesaj Gönder",
-            `${listing.owner.name} kullanıcısına mesaj gönderme ekranına yönlendiriliyorsunuz...`,
-            [{ text: "Tamam" }]
+            'İlanı Sil',
+            'Bu ilanı/görevi silmek istediğinize emin misiniz?',
+            [
+                { text: 'İptal', style: 'cancel' },
+                {
+                    text: 'Sil',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await removeListing(listing.id);
+                        router.replace('/');
+                    },
+                },
+            ]
         );
     };
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <ArrowLeft size={20} color={Colors.slate600} />
-                    <Text style={styles.backText}>Geri Dön</Text>
+            {/* Hero Image with floating back button */}
+            <View style={styles.heroContainer}>
+                <Image
+                    source={typeof listing.image === 'string' ? { uri: listing.image } : listing.image}
+                    style={styles.heroImage}
+                    contentFit="cover"
+                    transition={300}
+                />
+                <View style={styles.heroOverlay} />
+
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
+                    <ArrowLeft size={20} color={Colors.white} />
                 </TouchableOpacity>
+
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} activeOpacity={0.8}>
+                    <Trash2 size={20} color={Colors.white} />
+                </TouchableOpacity>
+
+                <View style={styles.heroBadge}>
+                    <CategoryBadge category={listing.category} />
+                </View>
             </View>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <View style={styles.imageContainer}>
-                    <Image
-                        source={{ uri: listing.image }}
-                        style={styles.image}
-                        contentFit="cover"
-                        transition={300}
-                    />
-                    <View style={styles.badgePosition}>
-                        <CategoryBadge category={listing.category} />
+            {/* Scrollable Content */}
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <Text style={styles.title}>{listing.title}</Text>
+
+                {/* Meta row */}
+                <View style={styles.metaRow}>
+                    <View style={styles.metaItem}>
+                        <MapPin size={15} color={Colors.softGreen} style={styles.metaIcon} />
+                        <Text style={styles.metaText}>{listing.neighborhood}</Text>
+                    </View>
+                    <View style={styles.metaDivider} />
+                    <View style={styles.metaItem}>
+                        <Calendar size={15} color={Colors.softGreen} style={styles.metaIcon} />
+                        <Text style={styles.metaText}>{listing.date} eklendi</Text>
                     </View>
                 </View>
 
-                <View style={styles.contentContainer}>
-                    <Text style={styles.title}>{listing.title}</Text>
+                {/* Description */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Açıklama</Text>
+                    <Text style={styles.descriptionText}>{listing.description}</Text>
+                </View>
 
-                    <View style={styles.metaContainer}>
-                        <View style={styles.metaItem}>
-                            <MapPin size={16} color={Colors.softGreen} style={styles.iconSpaced} />
-                            <Text style={styles.metaText}>{listing.neighborhood}</Text>
-                        </View>
-                        <View style={styles.metaItem}>
-                            <Calendar size={16} color={Colors.softGreen} style={styles.iconSpaced} />
-                            <Text style={styles.metaText}>{listing.date} eklendi</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.descriptionSection}>
-                        <Text style={styles.sectionTitle}>Açıklama</Text>
-                        <Text style={styles.descriptionText}>{listing.description}</Text>
-                    </View>
-
+                {/* Owner card */}
+                {listing.owner && (
                     <View style={styles.ownerCard}>
                         <View style={styles.ownerAvatar}>
-                            <User size={24} color={Colors.softGreen} />
+                            <User size={22} color={Colors.softGreen} />
                         </View>
                         <View style={styles.ownerInfo}>
                             <Text style={styles.ownerName}>{listing.owner.name}</Text>
                             <Text style={styles.ownerJoined}>{listing.owner.joined} yılından beri üye</Text>
                         </View>
+                        <View style={styles.ownerLocationRow}>
+                            <MapPin size={12} color={Colors.slate400} />
+                            <Text style={styles.ownerLocation}>{listing.neighborhood}</Text>
+                        </View>
                     </View>
-
-                    <TouchableOpacity
-                        style={styles.messageButton}
-                        activeOpacity={0.8}
-                        onPress={handleSendMessage}
-                    >
-                        <MessageCircle size={20} color={Colors.white} style={styles.iconSpaced} />
-                        <Text style={styles.messageButtonText}>Mesaj Gönder</Text>
-                    </TouchableOpacity>
-                </View>
+                )}
             </ScrollView>
+
+            {/* Sticky CTA Footer */}
+            <View style={styles.footer}>
+                <TouchableOpacity
+                    style={styles.ctaButton}
+                    activeOpacity={0.85}
+                    onPress={() => setIsModalVisible(true)}
+                >
+                    {isVoluntary ? (
+                        <Handshake size={22} color={Colors.white} style={styles.ctaIcon} />
+                    ) : (
+                        <MessageCircle size={22} color={Colors.white} style={styles.ctaIcon} />
+                    )}
+                    <Text style={styles.ctaButtonText}>
+                        {isVoluntary ? 'Görevi Üstlen' : 'İletişime Geç'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Bottom Sheet Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isModalVisible}
+                onRequestClose={() => setIsModalVisible(false)}
+            >
+                <Pressable style={styles.modalBackdrop} onPress={() => setIsModalVisible(false)}>
+                    {/* stopPropagation so tapping the sheet itself doesn't close it */}
+                    <Pressable style={styles.modalSheet} onPress={() => {}}>
+                        {/* Drag handle */}
+                        <View style={styles.dragHandle} />
+
+                        {/* Icon */}
+                        <View style={styles.modalIconWrapper}>
+                            {isVoluntary ? (
+                                <CheckCircle size={48} color={Colors.softGreen} />
+                            ) : (
+                                <MessageCircle size={48} color={Colors.navyBlue} />
+                            )}
+                        </View>
+
+                        {/* Title */}
+                        <Text style={styles.modalTitle}>
+                            {isVoluntary ? 'Harika! Görevi Üstlendin 🎉' : 'İletişim Bilgileri'}
+                        </Text>
+
+                        {/* Description */}
+                        <Text style={styles.modalDescription}>
+                            {isVoluntary
+                                ? 'Gönen\'de birine yardımcı olduğun için teşekkürler. Detaylar için ilan sahibiyle iletişime geçebilirsin:'
+                                : 'İlan sahibiyle aşağıdaki numaradan iletişime geçerek eşyayı teslim alabilirsin:'}
+                        </Text>
+
+                        {/* Phone number row */}
+                        <View style={styles.phoneRow}>
+                            <Phone size={20} color={Colors.softGreen} style={styles.phoneIcon} />
+                            <Text style={styles.phoneNumber}>0555 123 45 67</Text>
+                        </View>
+
+                        {/* Close button */}
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            activeOpacity={0.7}
+                            onPress={() => setIsModalVisible(false)}
+                        >
+                            <Text style={styles.closeButtonText}>Kapat</Text>
+                        </TouchableOpacity>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -106,54 +197,68 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: Colors.white,
     },
-    header: {
-        paddingTop: Spacing.x12,
-        paddingHorizontal: Spacing.x4,
-        paddingBottom: Spacing.x4,
-        backgroundColor: Colors.slate50,
-    },
-    backButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    backText: {
-        marginLeft: Spacing.x2,
-        fontSize: FontSizes.base,
-        fontWeight: '500',
-        color: Colors.slate600,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    imageContainer: {
-        width: '100%',
+
+    // Hero
+    heroContainer: {
         height: 300,
-        backgroundColor: Colors.slate100,
         position: 'relative',
     },
-    image: {
+    heroImage: {
         width: '100%',
         height: '100%',
     },
-    badgePosition: {
+    heroOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.25)',
+    },
+    backButton: {
         position: 'absolute',
-        top: Spacing.x4,
+        top: Spacing.x12,
+        left: Spacing.x4,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    deleteButton: {
+        position: 'absolute',
+        top: Spacing.x12,
+        right: Spacing.x4,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    heroBadge: {
+        position: 'absolute',
+        bottom: Spacing.x4,
         left: Spacing.x4,
     },
-    contentContainer: {
+
+    // Content
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
         padding: Spacing.x6,
-        paddingBottom: Spacing.x12,
+        paddingBottom: Spacing.x4,
     },
     title: {
         fontSize: FontSizes['2xl'],
         fontWeight: 'bold',
         color: Colors.slate800,
         marginBottom: Spacing.x4,
+        lineHeight: 32,
     },
-    metaContainer: {
+
+    // Meta row
+    metaRow: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: Spacing.x4,
+        alignItems: 'center',
         marginBottom: Spacing.x6,
         paddingBottom: Spacing.x6,
         borderBottomWidth: 1,
@@ -163,40 +268,53 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    iconSpaced: {
-        marginRight: 6,
+    metaIcon: {
+        marginRight: 5,
     },
     metaText: {
         fontSize: FontSizes.sm,
         color: Colors.slate500,
     },
-    descriptionSection: {
+    metaDivider: {
+        width: 1,
+        height: 14,
+        backgroundColor: Colors.slate200,
+        marginHorizontal: Spacing.x3,
+    },
+
+    // Description
+    section: {
         marginBottom: Spacing.x8,
     },
     sectionTitle: {
         fontSize: FontSizes.lg,
-        fontWeight: '600',
+        fontWeight: '700',
         color: Colors.slate800,
         marginBottom: Spacing.x3,
     },
     descriptionText: {
         fontSize: FontSizes.base,
         color: Colors.slate600,
-        lineHeight: 24,
+        lineHeight: 26,
     },
+
+    // Owner card
     ownerCard: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: Colors.slate50,
         padding: Spacing.x4,
-        borderRadius: 12,
-        marginBottom: Spacing.x6,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: Colors.slate200,
+        marginBottom: Spacing.x4,
+        flexWrap: 'wrap',
     },
     ownerAvatar: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#d1fae5', // soft-green-100
+        backgroundColor: '#d1fae5',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: Spacing.x4,
@@ -214,24 +332,130 @@ const styles = StyleSheet.create({
         color: Colors.slate500,
         marginTop: 2,
     },
-    messageButton: {
+    ownerLocationRow: {
         flexDirection: 'row',
-        backgroundColor: Colors.navyBlue,
+        alignItems: 'center',
+        marginTop: Spacing.x2,
+        width: '100%',
+        paddingLeft: 64,
+    },
+    ownerLocation: {
+        fontSize: FontSizes.xs,
+        color: Colors.slate400,
+        marginLeft: 4,
+    },
+
+    // Footer CTA
+    footer: {
+        paddingHorizontal: Spacing.x6,
+        paddingVertical: Spacing.x4,
+        paddingBottom: Spacing.x8,
+        backgroundColor: Colors.white,
+        borderTopWidth: 1,
+        borderTopColor: Colors.slate100,
+    },
+    ctaButton: {
+        flexDirection: 'row',
+        backgroundColor: Colors.softGreen,
         paddingVertical: 16,
-        borderRadius: 12,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: Colors.navyBlue,
+        shadowColor: Colors.softGreen,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 5,
     },
-    messageButtonText: {
+    ctaIcon: {
+        marginRight: Spacing.x2,
+    },
+    ctaButtonText: {
         color: Colors.white,
         fontSize: FontSizes.lg,
-        fontWeight: '600',
+        fontWeight: '700',
     },
+
+    // Modal
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalSheet: {
+        backgroundColor: Colors.white,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingHorizontal: Spacing.x6,
+        paddingTop: Spacing.x3,
+        paddingBottom: Spacing.x10,
+        alignItems: 'center',
+    },
+    dragHandle: {
+        width: 40,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: Colors.slate200,
+        marginBottom: Spacing.x6,
+    },
+    modalIconWrapper: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: Colors.slate50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: Spacing.x4,
+    },
+    modalTitle: {
+        fontSize: FontSizes.xl,
+        fontWeight: '700',
+        color: Colors.slate800,
+        textAlign: 'center',
+        marginBottom: Spacing.x3,
+    },
+    modalDescription: {
+        fontSize: FontSizes.sm,
+        color: Colors.slate500,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: Spacing.x6,
+    },
+    phoneRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.slate50,
+        borderWidth: 1,
+        borderColor: Colors.slate200,
+        borderRadius: 12,
+        paddingVertical: Spacing.x4,
+        paddingHorizontal: Spacing.x6,
+        width: '100%',
+        marginBottom: Spacing.x6,
+    },
+    phoneIcon: {
+        marginRight: Spacing.x3,
+    },
+    phoneNumber: {
+        fontSize: FontSizes.lg,
+        fontWeight: '700',
+        color: Colors.slate800,
+        letterSpacing: 1,
+    },
+    closeButton: {
+        width: '100%',
+        backgroundColor: Colors.slate100,
+        paddingVertical: 16,
+        borderRadius: 14,
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        fontSize: FontSizes.base,
+        fontWeight: '600',
+        color: Colors.slate600,
+    },
+
+    // Not found
     notFoundContainer: {
         flex: 1,
         alignItems: 'center',
@@ -255,9 +479,9 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.softGreen,
         paddingVertical: 12,
         paddingHorizontal: 24,
-        borderRadius: 8,
+        borderRadius: 10,
     },
-    backButtonText: {
+    backButtonLargeText: {
         color: Colors.white,
         fontSize: FontSizes.base,
         fontWeight: '600',

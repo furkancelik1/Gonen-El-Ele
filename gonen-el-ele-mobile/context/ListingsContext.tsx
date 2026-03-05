@@ -41,6 +41,12 @@ export function ListingsProvider({ children }: { children: React.ReactNode }) {
                         if (item.id === 4) item.image = require('../assets/images/market.png');
                         if (item.id === 5) item.image = require('../assets/images/masa.png');
                         if (item.id === 6) item.image = require('../assets/images/sohbet.png');
+                        if (item.id === 7) item.image = require('../assets/images/bebek_arabasi.png');
+                        if (item.id === 8) item.image = require('../assets/images/market_yardim.png');
+                        if (item.id === 9) item.image = require('../assets/images/masa.png');
+                        if (item.id === 10) item.image = require('../assets/images/kislik_mont.png');
+                        if (item.id === 11) item.image = require('../assets/images/lesson.png');
+                        if (item.id === 12) item.image = require('../assets/images/ingilizce_pratik.png');
                         return item;
                     });
 

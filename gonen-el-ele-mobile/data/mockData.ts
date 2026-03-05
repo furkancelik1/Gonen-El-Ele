@@ -72,5 +72,65 @@ export const mockListings = [
         date: '1 hafta önce',
         description: 'Online veya yüz yüze, İngilizce speaking pratiği yapmak isteyen lise ve üniversite öğrencilerine yardımcı olabilirim.',
         owner: { name: 'Selin T.', joined: '2024' }
+    },
+    {
+        id: 7,
+        title: 'Çocuk Bisikleti (5-8 Yaş)',
+        category: 'Physical Item',
+        neighborhood: 'Kurtuluş',
+        image: require('../assets/images/bebek_arabasi.png'),
+        date: '2 gün önce',
+        description: 'Kızımın büyüdüğü için artık kullanamadığı, yan tekerlekleri dahil 16 inçlik çocuk bisikleti. Lastikleri tam, boyası yerinde.',
+        owner: { name: 'Fatma Ş.', joined: '2023' }
+    },
+    {
+        id: 8,
+        title: 'Hasta / Yaşlı Bakım Desteği',
+        category: 'Voluntary Service',
+        neighborhood: 'Plevne',
+        image: require('../assets/images/market_yardim.png'),
+        date: '3 gün önce',
+        description: 'Sağlık meslek yüksekokulu mezunuyum. Hafta içi öğleden sonraları evde bakıma muhtaç yaşlı ya da hasta bireylere ücretsiz destek verebilirim.',
+        owner: { name: 'Elif D.', joined: '2024' }
+    },
+    {
+        id: 9,
+        title: 'Temiz Buzdolabı (Küçük Boy)',
+        category: 'Physical Item',
+        neighborhood: 'Gündoğdu',
+        image: require('../assets/images/masa.png'),
+        date: '5 gün önce',
+        description: 'Taşınma nedeniyle ihtiyaç fazlası olan 80 litrelik tek kapılı mini buzdolabı. Soğutması sorunsuz çalışıyor, alacak olan kendisi taşımalı.',
+        owner: { name: 'Tarık M.', joined: '2022' }
+    },
+    {
+        id: 10,
+        title: 'Boyacılık / Küçük Tamirat Yardımı',
+        category: 'Voluntary Service',
+        neighborhood: 'Malkoç',
+        image: require('../assets/images/kislik_mont.png'),
+        date: '6 gün önce',
+        description: 'Emekli usta olarak küçük çaplı duvar boyama ve tadilat işlerinde ihtiyaç sahibi komşulara ücretsiz yardım edebilirim. Malzeme karşı taraftan.',
+        owner: { name: 'Recep A.', joined: '2021' }
+    },
+    {
+        id: 11,
+        title: 'Kitap Seti (İlkokul 3-4. Sınıf)',
+        category: 'Physical Item',
+        neighborhood: 'Akçaova',
+        image: require('../assets/images/lesson.png'),
+        date: '1 hafta önce',
+        description: 'Çocuğumdan kalan temiz durumda hikaye ve etkinlik kitapları. Toplam 12 kitap, ihtiyaç sahibi öğrenciye bütün olarak verilecek.',
+        owner: { name: 'Nurcan K.', joined: '2023' }
+    },
+    {
+        id: 12,
+        title: 'Bilgisayar / Telefon Teknik Destek',
+        category: 'Voluntary Service',
+        neighborhood: 'Reşadiye',
+        image: require('../assets/images/ingilizce_pratik.png'),
+        date: '2 hafta önce',
+        description: 'Bilgisayar mühendisiyim. Yaşlı veya teknolojiye uzak komşularımıza telefon, tablet ve bilgisayar kullanımı konusunda ücretsiz yardım edebilirim.',
+        owner: { name: 'Burak Y.', joined: '2024' }
     }
 ];
