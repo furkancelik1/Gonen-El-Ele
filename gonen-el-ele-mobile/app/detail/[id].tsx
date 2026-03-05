@@ -31,22 +31,30 @@ export default function DetailScreen() {
 
     const isVoluntary = listing.category === 'Voluntary Service';
 
-    const handleDelete = () => {
-        Alert.alert(
-            'İlanı Sil',
-            'Bu ilanı/görevi silmek istediğinize emin misiniz?',
-            [
-                { text: 'İptal', style: 'cancel' },
-                {
-                    text: 'Sil',
-                    style: 'destructive',
-                    onPress: async () => {
-                        await removeListing(listing.id);
-                        router.replace('/');
+    const handleDelete = async () => {
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm('Bu ilanı/görevi silmek istediğinize emin misiniz?');
+            if (confirmed) {
+                await removeListing(listing.id);
+                router.replace('/');
+            }
+        } else {
+            Alert.alert(
+                'İlanı Sil',
+                'Bu ilanı/görevi silmek istediğinize emin misiniz?',
+                [
+                    { text: 'İptal', style: 'cancel' },
+                    {
+                        text: 'Sil',
+                        style: 'destructive',
+                        onPress: async () => {
+                            await removeListing(listing.id);
+                            router.replace('/');
+                        },
                     },
-                },
-            ]
-        );
+                ]
+            );
+        }
     };
 
     return (
@@ -61,8 +69,18 @@ export default function DetailScreen() {
                 />
                 <View style={styles.heroOverlay} />
 
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
-                    <ArrowLeft size={20} color={Colors.white} />
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => {
+                        if (router.canGoBack()) {
+                            router.back();
+                        } else {
+                            router.replace('/');
+                        }
+                    }}
+                    activeOpacity={0.8}
+                >
+                    <ArrowLeft size={24} color={Colors.white} />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} activeOpacity={0.8}>
