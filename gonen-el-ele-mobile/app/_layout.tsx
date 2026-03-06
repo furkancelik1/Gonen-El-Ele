@@ -1,35 +1,37 @@
-
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ListingsProvider, ListingsContext } from '../context/ListingsContext';
+import { ListingsProvider, useListings } from '../context/ListingsContext';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 
 // SplashScreen'i hemen gizlemeyi engelle
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 
-
-function SplashLayout({ children }) {
-    const { listings, loading } = useContext(ListingsContext);
+function SplashLayout({ children }: PropsWithChildren) {
+    const { isLoading: loading } = useListings();
     const [appReady, setAppReady] = useState(false);
 
     useEffect(() => {
-        let timeout;
-        if (!loading && listings && listings.length > 0) {
-            timeout = setTimeout(() => {
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+        if (!loading) {
+            timeoutId = setTimeout(() => {
                 setAppReady(true);
-                SplashScreen.hideAsync();
-            }, 2000);
+                void SplashScreen.hideAsync().catch(() => {});
+            }, 500);
         }
-        return () => clearTimeout(timeout);
-    }, [loading, listings]);
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [loading]);
 
     if (!appReady) {
-        // SplashScreen.hideAsync çağrılana kadar children'ı render etme
         return null;
     }
-    return children;
+
+    return <>{children}</>;
 }
 
 export default function RootLayout() {
